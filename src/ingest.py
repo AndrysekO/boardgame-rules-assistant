@@ -7,6 +7,7 @@ import collections
 import pathlib
 import re
 import shutil
+import textwrap
 
 import chromadb
 import ollama
@@ -17,8 +18,9 @@ DB_DIR = pathlib.Path("data/chroma")
 COLLECTION = "rules"
 EMBED_MODEL = "nomic-embed-text"
 
-CHUNK_CHARS = 800  # target chunk size when a section is too long to keep whole
-OVERLAP_CHARS = 150
+# Chunks aim for 300-500 characters. Only the ceiling can be enforced: a short
+# numbered step or the tail of a section is as long as it is.
+CHUNK_MAX = 500
 EMBED_BATCH = 64
 
 # A line counts as a heading if it is this much bigger than the body text.
@@ -245,42 +247,79 @@ def split_block(block, baseline):
 
 # ------------------------------------------------------------------- chunking
 
+# A numbered step: "1) Shuffle the deck". The lookbehind keeps cross-references
+# like "(see page 9)" and parentheticals like "(1) facedown" from matching, and
+# the capital letter after the bracket is what a real step always starts with.
+STEP = re.compile(r"(?<![\d(])\d{1,2}\)\s+(?=[A-Z])")
+
+# End of a sentence: closing punctuation, a space, then something that is not a
+# lower-case letter. That last part keeps "e.g. the" and "approx. 3" together.
+SENTENCE = re.compile(r"(?<=[.!?”])\s+(?=[^a-z])")
+
+
+def split_steps(text):
+    """Split a paragraph in front of each numbered step, keeping the number."""
+    cuts = [match.start() for match in STEP.finditer(text)]
+    pieces = (text[start:end] for start, end in zip([0] + cuts, cuts + [len(text)]))
+    return [piece.strip() for piece in pieces if piece.strip()]
+
+
+def sentences(paragraphs):
+    """Yield (page, group, sentence) for everything in one section.
+
+    `group` changes at every numbered step, and again at the first text that is
+    not one. A chunk never spans two groups, which is what keeps each step
+    standing on its own. Sentences longer than a whole chunk are wrapped on
+    spaces, so no chunk ever ends mid-word.
+    """
+    group, after_step = 0, False
+    for page, paragraph in paragraphs:
+        for piece in split_steps(paragraph):
+            is_step = STEP.match(piece) is not None
+            if is_step or after_step:
+                group += 1
+            after_step = is_step
+            for sentence in SENTENCE.split(piece):
+                for part in textwrap.wrap(
+                    sentence, CHUNK_MAX, break_long_words=False, break_on_hyphens=False
+                ):
+                    yield page, group, part
+
+
 def chunk(paragraphs):
-    """Split one section's paragraphs into ~CHUNK_CHARS pieces with overlap.
+    """Pack one section into chunks of at most CHUNK_MAX characters.
+
+    Sentences are filled in until the next one would not fit, so a chunk only
+    ever ends at a sentence, paragraph, or step boundary.
 
     Yields (page, text), where page is the page the chunk starts on.
     """
-    text = "\n".join(para for _, para in paragraphs)
-
-    offsets, position = [], 0
-    for page, para in paragraphs:
-        offsets.append((position, page))
-        position += len(para) + 1
-
-    def page_at(index):
-        return max((page for start, page in offsets if start <= index), default=offsets[0][1])
-
-    start = 0
-    while start < len(text):
-        end = start + CHUNK_CHARS
-        if end < len(text):
-            # Back off to the nearest paragraph or word boundary so chunks do
-            # not stop mid-sentence; never give up more than half the chunk.
-            floor = start + CHUNK_CHARS // 2
-            cut = text.rfind("\n", floor, end)
-            if cut == -1:
-                cut = text.rfind(" ", floor, end)
-            if cut != -1:
-                end = cut
-        piece = text[start:end].strip()
-        if piece:
-            yield page_at(start), piece
-        if end >= len(text):
-            return
-        start = max(end - OVERLAP_CHARS, start + 1)
+    current, page, group = "", None, None
+    for sentence_page, sentence_group, sentence in sentences(paragraphs):
+        if current and (sentence_group != group or len(current) + 1 + len(sentence) > CHUNK_MAX):
+            yield page, current
+            current = ""
+        if not current:
+            page, group = sentence_page, sentence_group
+        current = f"{current} {sentence}".strip()
+    if current:
+        yield page, current
 
 
 # -------------------------------------------------------------------- ingest
+
+def label(game, section, text):
+    """Prefix a chunk so the embedding carries the game and section with it.
+
+    A chunk that is nothing but its own title (a component list, a diagram
+    label) would otherwise read as the same words twice.
+    """
+    if not section:
+        return f"{game}: {text}"
+    if section == text:
+        return f"{game} › {section}"
+    return f"{game} › {section}: {text}"
+
 
 def embed(texts):
     vectors = []
@@ -303,12 +342,14 @@ def main():
     for pdf in pdfs:
         # Files are named <game>_<source>.pdf, e.g. mars_faq.pdf.
         game, _, source = pdf.stem.rpartition("_")
-        game = game.title()
+        game = game.replace("_", " ").title()
 
         documents, metadatas, ids = [], [], []
         for section, paragraphs in read_sections(pdf, source):
             for page, text in chunk(paragraphs):
-                documents.append(f"{section}\n{text}" if section and section != text else text)
+                if not any(c.isalpha() for c in text):
+                    continue  # a bare number or symbol, e.g. a contents page number
+                documents.append(label(game, section, text))
                 metadatas.append({"game": game, "source": source, "page": page, "section": section})
                 ids.append(f"{pdf.stem}-{len(ids)}")
 
