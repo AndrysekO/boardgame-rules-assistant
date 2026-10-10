@@ -1,8 +1,14 @@
 [
     {
         "game": "Terraforming Mars",
-        "question": "What is the maximum number of players?",
+        "question": "What is the number of players that can play?",
         "must_contain": "2-5 players",
+        "type": "lookup"
+    },
+    {
+        "game": "Terraforming Mars",
+        "question": "What is the maximum number of players?",
+        "must_contain": "5 players",
         "type": "lookup"
     },
     {
