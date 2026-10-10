@@ -1,0 +1,149 @@
+[
+    {
+        "game": "Terraforming Mars",
+        "question": "What is the maximum number of players?",
+        "must_contain": "2-5 players",
+        "type": "lookup"
+    },
+    {
+        "game": "Terraforming Mars",
+        "question": "How many oceans are in terraforming mars?",
+        "must_contain": "9 Ocean tiles",
+        "type": "implicit"
+    },
+    {
+        "game": "Terraforming Mars",
+        "question": "When does the game end?",
+        "must_contain": "enough oxygen to breathe",
+        "type": "lookup"
+    },
+    {
+        "game": "Terraforming Mars",
+        "question": "What each standard project do?",
+        "must_contain": [
+            "Sell patents",
+            "Power plant",
+            "Asteroid",
+            "Aquifer",
+            "Greenery",
+            "City"
+        ],
+        "type": "list"
+    },
+    {
+        "game": "Terraforming Mars",
+        "question": "How much buying a card costs in terraforming mars?",
+        "must_contain": "3 M",
+        "type": "lookup"
+    },
+    {
+        "game": "Terraforming Mars",
+        "question": "Can I go over in temperature and oxygen parameter?",
+        "must_contain": "has reached its goal",
+        "type": "implicit"
+    },
+    {
+        "game": "Terraforming Mars",
+        "question": "Can I affect an opponent's production or resources?",
+        "must_contain": "red border around a resource",
+        "type": "faq"
+    },
+    {
+        "game": "Everdell",
+        "question": "What are the main resources in everdell?",
+        "must_contain": [
+            "Berries",
+            "Twigs",
+            "Resin",
+            "Pebbles"
+        ],
+        "type": "implicit"
+    },
+    {
+        "game": "Everdell",
+        "question": "When I prepare for new season?",
+        "must_contain": "placed all of your workers",
+        "type": "lookup"
+    },
+    {
+        "game": "Everdell",
+        "question": "How many cards can I have in my city?",
+        "must_contain": "15 card limit",
+        "type": "lookup"
+    },
+    {
+        "game": "Everdell",
+        "question": "Difference between exclusive and shared location?",
+        "must_contain": [
+            "exclusive location",
+            "shared location"
+        ],
+        "type": "lookup"
+    },
+    {
+        "game": "Everdell",
+        "question": "Can the board run out of resources in everdell?",
+        "must_contain": "no limit to the amount",
+        "type": "lookup"
+    },
+    {
+        "game": "Bang",
+        "question": "What roles are in a 4 player game?",
+        "must_contain": "4 players: 1 Sheriff, 1 Renegade, 2 Outlaws",
+        "type": "lookup"
+    },
+    {
+        "game": "Bang",
+        "question": "What is the distance with panic card?",
+        "must_contain": "a player at distance 1",
+        "type": "lookup"
+    },
+    {
+        "game": "Bang",
+        "question": "What is the distance with panic card when I have mustang?",
+        "must_contain": [
+            "a player at distance 1",
+            "distance between other players and you is increased by 1"
+        ],
+        "type": "interaction"
+    },
+    {
+        "game": "Bang",
+        "question": "What is the distance with panic card when I have scope?",
+        "must_contain": [
+            "a player at distance 1",
+            "see all the other players at a distance decreased by 1"
+        ],
+        "type": "interaction"
+    },
+    {
+        "game": "Bang",
+        "question": "What happens when I have both jail and dynamite?",
+        "must_contain": "check the Dynamite first",
+        "type": "lookup"
+    },
+    {
+        "game": "Bang",
+        "question": "Which characters have only 3 life points?",
+        "must_contain": [
+            "El Gringo",
+            "Paul Regret"
+        ],
+        "type": "lookup"
+    },
+    {
+        "game": "Bang",
+        "question": "Do I need to draw card for barrel when I'm hit by Slab the Killer and I've used Missed!?",
+        "must_contain": "only counts as one",
+        "type": "lookup"
+    },
+    {
+        "game": "Bang",
+        "question": "Do I need to play 2 beers when I have 1 life and I get hit by dynamite?",
+        "must_contain": [
+            "lose 3 life points",
+            "You have 2 life points left, and suffer 3 damages from a Dynamite"
+        ],
+        "type": "interaction"
+    }
+]
