@@ -181,14 +181,29 @@ def read_sections(path, source):
     baseline = body_size(doc) * HEADING_RATIO
 
     section, section_page, paragraphs = "", 1, []
+    labels = []  # (page, title) of consecutive titles with no text under them
+
+    def flush_labels():
+        """Turn a run of body-less titles (a component list, diagram labels) into one section."""
+        if not labels:
+            return []
+        title = labels[0][1]
+        rest = [text for _, text in labels[1:]]
+        group = (title, [(labels[0][0], ", ".join(rest) if rest else title)])
+        labels.clear()
+        return [group]
 
     def finish():
-        # A title with no body under it is still real text - component lists and
-        # diagram labels are set large and read as titles - so keep it as a
-        # one-line chunk instead of dropping it on the floor.
-        if paragraphs or section:
-            return section, paragraphs or [(section_page, section)]
-        return None
+        """Return the finished section(s) as a list."""
+        if not section and not paragraphs:
+            return []
+        if not paragraphs:
+            # A title with nothing under it: collect it, so a list of large-print
+            # labels on one page becomes one chunk instead of many tiny ones.
+            out = flush_labels() if labels and labels[-1][0] != section_page else []
+            labels.append((section_page, section))
+            return out
+        return flush_labels() + [(section, paragraphs)]
 
     for number, page in enumerate(doc, start=1):
         for block in reading_order(page):
@@ -196,15 +211,12 @@ def read_sections(path, source):
                 continue
             for heading, text in split_block(block, baseline):
                 if heading:
-                    done = finish()
-                    if done:
-                        yield done
+                    yield from finish()
                     section, section_page, paragraphs = text, number, []
                 elif text:
                     paragraphs.append((number, text))
-    done = finish()
-    if done:
-        yield done
+    yield from finish()
+    yield from flush_labels()
     doc.close()
 
 
