@@ -9,6 +9,7 @@ import sys
 import time
 
 sys.path.insert(0, "src")
+import ask
 from ask import answer
 
 label = sys.argv[1] if len(sys.argv) > 1 else "run"
@@ -24,14 +25,18 @@ for q in questions:
         needles = [needles]
     retrieved_text = " ".join(text.lower() for text, _ in chunks)
     found = all(n.lower() in retrieved_text for n in needles) if needles else ""
+    usage = ask.LAST_USAGE  # model + token counts from the call we just made
     rows.append({
         "game": q["game"],
         "question": q["question"],
         "type": q.get("type", ""),
         "expected": q.get("answer", ""),
+        "model": usage["model"],
         "model_answer": text,
         "retrieved_pages": pages,
         "seconds": round(time.time() - start, 1),
+        "input_tokens": usage["input_tokens"] or "",   # Claude only
+        "output_tokens": usage["output_tokens"] or "",
         "grade": "",   # fill in: correct / partial / wrong
         "cause": "",   # fill in for wrong ones: retrieval / model / both
         "chunk_retrieved": found,
