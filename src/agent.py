@@ -9,18 +9,21 @@ Run with: uv run python src/agent.py "can a greenery tile go next to a city?"
 
 import argparse
 import os
+import re
 import textwrap
 import threading
 
+import chromadb
+from langchain.agents import create_agent
 from langchain_anthropic import ChatAnthropic
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 from langgraph.errors import GraphRecursionError
-from langgraph.prebuilt import create_react_agent
 
-from ask import CHAT_MODEL, MAX_TOKENS, TOP_K, retrieve
+from ask import CHAT_MODEL, COLLECTION, DB_DIR, MAX_TOKENS, TOP_K, retrieve
 
 MAX_TOOL_CALLS = 6
+MAX_EXACT_MATCHES = 15
 
 # Every search made while answering the current question, in order. The tools
 # append to it and agent_answer() resets it, so the tools can enforce the limit.
@@ -33,7 +36,7 @@ SEARCH_LOCK = threading.Lock()
 
 SYSTEM = """You answer board game rules questions.
 
-You have two tools: search_rulebook and search_faq. Use them to find excerpts
+You have three tools: search_rulebook, search_faq and search_exact. Use them to find excerpts
 from the rules, and answer only from those excerpts. Never answer from anything
 you know about these games from elsewhere, and do not guess.
 
@@ -52,6 +55,22 @@ If no excerpt contains a sentence that answers the question, reply exactly:
 not in the rules"""
 
 
+def find_exact(game, text):
+    """Return up to 15 chunks of `game` that contain `text`, ignoring case.
+
+    Chroma's $contains is case-sensitive, so this uses $regex instead: "(?i)"
+    turns off case-sensitivity and re.escape makes characters like "." or "!"
+    in the text match literally.
+    """
+    collection = chromadb.PersistentClient(path=DB_DIR).get_collection(COLLECTION)
+    result = collection.get(
+        where={"game": game.title()},
+        where_document={"$regex": "(?i)" + re.escape(text)},
+        limit=MAX_EXACT_MATCHES,
+    )
+    return list(zip(result["documents"], result["metadatas"]))
+
+
 def search(tool_name, game, query, source):
     """Run one search for a tool and return its chunks as numbered excerpts."""
     with SEARCH_LOCK:
@@ -59,10 +78,13 @@ def search(tool_name, game, query, source):
             return ("Search limit reached. Answer from the excerpts you already have, "
                     "or reply: not in the rules")
         TOOL_CALLS.append({"tool": tool_name, "game": game, "query": query})
-        chunks = retrieve(query, game, k=TOP_K, source=source)
+        if tool_name == "search_exact":
+            chunks = find_exact(game, query)
+        else:
+            chunks = retrieve(query, game, k=TOP_K, source=source)
 
     if not chunks:
-        return f"No excerpts found for game {game!r}."
+        return f"No excerpts found for {query!r} in game {game!r}."
     # Same excerpt format as ask.py's answer().
     return "\n\n".join(
         f"[{number}] {metadata['game']} p.{metadata['page']}\n{text}"
@@ -84,10 +106,22 @@ def search_rulebook(game: str, query: str) -> str:
 def search_faq(game: str, query: str) -> str:
     """Search a game's FAQ and return the 5 closest excerpts.
 
+    Only Terraforming Mars has a FAQ, so don't use this for other games.
     game must be one of: "Terraforming Mars", "Everdell", "Bang".
     query is what to look for, e.g. "greenery tile placement".
     """
     return search("search_faq", game, query, "faq")
+
+
+@tool
+def search_exact(game: str, text: str) -> str:
+    """Return every excerpt of a game that contains the exact text (any case), up to 15.
+
+    Use for specific numbers, values or names, e.g. "3 life points" or a card
+    name. Use search_rulebook for questions about how rules work.
+    game must be one of: "Terraforming Mars", "Everdell", "Bang".
+    """
+    return search("search_exact", game, text, None)
 
 
 def make_model():
@@ -110,7 +144,9 @@ def agent_answer(question, game=None):
     the tool name, game and query, in the order the agent made them.
     """
     TOOL_CALLS.clear()
-    agent = create_react_agent(make_model(), [search_rulebook, search_faq], prompt=SYSTEM)
+    agent = create_agent(
+        make_model(), [search_rulebook, search_faq, search_exact], system_prompt=SYSTEM
+    )
 
     user_message = question
     if game:
