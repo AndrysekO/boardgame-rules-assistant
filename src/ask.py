@@ -38,19 +38,30 @@ If no excerpt contains a sentence that answers the question, reply exactly:
 not in the rules"""
 
 
-def retrieve(question, game=None, k=TOP_K):
+def retrieve(question, game=None, k=TOP_K, source=None):
     """Return the k chunks closest to `question`, as (text, metadata) pairs.
 
+    `source` optionally limits the search to "rules" or "faq" chunks.
     The metadata is what ingest.py stored - game, source, page, section - plus
     a `score`: the collection uses cosine distance, so similarity is 1 minus it.
     """
     collection = chromadb.PersistentClient(path=DB_DIR).get_collection(COLLECTION)
     vector = ollama.embed(model=EMBED_MODEL, input=question).embeddings[0]
-    result = collection.query(
-        query_embeddings=[vector],
-        n_results=k,
-        where={"game": game.title()} if game else None,
-    )
+
+    filters = []
+    if game:
+        filters.append({"game": game.title()})
+    if source:
+        filters.append({"source": source})
+    # Chroma takes a single condition as-is, but two must be wrapped in $and.
+    if len(filters) == 2:
+        where = {"$and": filters}
+    elif filters:
+        where = filters[0]
+    else:
+        where = None
+
+    result = collection.query(query_embeddings=[vector], n_results=k, where=where)
     # Chroma nests one list per query; we only ever send one.
     return [
         (text, dict(metadata, score=1 - distance))
