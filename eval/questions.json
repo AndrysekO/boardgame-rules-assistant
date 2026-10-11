@@ -15,31 +15,24 @@
     },
     {
         "game": "Terraforming Mars",
-        "question": "How many oceans are in terraforming mars?",
+        "question": "How many ocean tiles does the game include?",
         "must_contain": "9 Ocean tiles",
         "answer": "9 Ocean tiles.",
         "type": "implicit"
     },
     {
         "game": "Terraforming Mars",
-        "question": "When does the game end?",
-        "must_contain": "enough oxygen to breathe",
-        "answer": "When all three global parameters reach their goals (14% oxygen, 9 oceans, +8 °C), the game ends at the end of that generation, after production; players can then convert plants into greeneries before final scoring.",
-        "type": "lookup"
+        "question": "How many areas on the board are reserved for oceans?",
+        "must_contain": "12 areas on the game board",
+        "answer": "12 Ocean tiles.",
+        "type": "implicit"
     },
     {
         "game": "Terraforming Mars",
-        "question": "What each standard project do?",
-        "must_contain": [
-            "Sell patents",
-            "Power plant",
-            "Asteroid",
-            "Aquifer",
-            "Greenery",
-            "City"
-        ],
-        "answer": "Sell patents: can sell cards, Power plant: increase energy production, Asteroid: increase temperature, Aquifer: place an ocean tile, Greenery: place a greenery tile, City: place a city tile.",
-        "type": "list"
+        "question": "When does the game end?",
+        "must_contain": "enough oxygen to breathe",
+        "answer": "When all three global parameters reach their goals (14% oxygen, 9 oceans, +8 °C).",
+        "type": "lookup"
     },
     {
         "game": "Terraforming Mars",
@@ -182,7 +175,8 @@
     {
         "game": "Terraforming Mars",
         "question": "What is the best corporation for beginners?",
-        "answer": "not in the rules",
+        "must_contain": "Beginner Corporation",
+        "answer": "Beginner Corporation.",
         "type": "not_in_rules"
     },
     {
