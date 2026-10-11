@@ -1,0 +1,52 @@
+game,question,type,expected,model_answer,retrieved_pages,seconds,grade,cause,chunk_retrieved
+Terraforming Mars,What is the number of players that can play?,lookup,"1-5 players: 2-5 in the standard game, plus a solo variant for 1 player (p.13).","Quote: This describes the setup for the standard game for 2-5 players. [Terraforming Mars p.7]
+Answer: 2-5 players.","p.33, p.14, p.7, p.13, p.30",7.8,partial,model,True
+Terraforming Mars,What is the maximum number of players?,lookup,5 players.,not in the rules,"p.33, p.13, p.32, p.13, p.32",2.6,wrong,retrieval,False
+Terraforming Mars,How many oceans are in terraforming mars?,implicit,9 Ocean tiles.,"Quote: [1] Terraforming Mars › The Map: 12. Special reserved areas: 3 areas are reserved for specific cities. No other tiles may be placed there.
+
+Answer: 12","p.4, p.14, p.14, p.15, p.4",4.2,wrong,retrieval,False
+Terraforming Mars,When does the game end?,lookup,"When all three global parameters reach their goals (14% oxygen, 9 oceans, +8 °C), the game ends at the end of that generation, after production; players can then convert plants into greeneries before final scoring.","Quote: When all three global parameters have reached their goal, the game ends after that generation (after the production phase). [2]
+Answer: After the production phase, when all three global parameters have reached their goal.","p.12, p.3, p.29, p.3, p.12",4.0,correct,,True
+Terraforming Mars,What each standard project do?,list,"Sell patents: can sell cards, Power plant: increase energy production, Asteroid: increase temperature, Aquifer: place an ocean tile, Greenery: place a greenery tile, City: place a city tile.","Quote: The 6 standard projects printed on the game board are always available to the players. Each of them may be used several times during the same generation. [5]
+
+Answer: They can be used several times during the same generation.","p.16, p.16, p.16, p.16, p.10",4.4,wrong,retrieval,True
+Terraforming Mars,How much buying a card costs in terraforming mars?,lookup,3 MegaCredits.,"Quote: Cards cost 3 M€ to buy into your hand during the research phase, but have different costs to play from your hand into play. [2]
+Answer: 3 M€","p.6, p.14, p.9, p.9, p.43",4.1,correct,,True
+Terraforming Mars,Can I go over in temperature and oxygen parameter?,implicit,"No, temperature or oxygen can't be increased when it's reach it max value and the player won't increase their TR.","Quote: Whenever you raise one of them, your terraform rating also increases by that much, giving you a higher income and score. When a global parameter has reached its goal, it can’t be raised any further, and so does not increase your TR. [2]
+
+Answer: No.","p.14, p.3, p.49, p.11, p.39",5.0,correct,,True
+Terraforming Mars,Can I affect an opponent's production or resources?,faq,"Yes, but only when the resource or production symbol on the card has a red border; then you may reduce any player’s.","Quote: Only when you see the red border around a resource or production symbol can you affect another player. [1]
+
+Answer: Only when you see a red border around a resource or production symbol.","p.17, p.17, p.17, p.17, p.14",4.4,correct,,True
+Everdell,What are the main resources in everdell?,implicit,"Berries, Twigs, Resin, Pebbles",not in the rules,"p.8, p.3, p.8, p.3, p.8",2.4,wrong,retrieval,False
+Everdell,When I prepare for new season?,lookup,When you have placed all your workers and can’t or don’t want to play a card.,"Quote: On your next turn you play a Barge Toad from the Meadow by paying 2 berries, and then immediately gain 2 twigs from the Barge Toad because you have a Farm in your city. When preparing for the next season, new workers from the Ever Tree join your growing city. Gain the corresponding worker(s) and activate the next season’s listed bonus. In spring, you gain 1 new worker and activate all green Production cards in your city in any order you choose. In summer, you gain 1 new worker. [4]
+
+Answer: When you have placed all of your workers and you cannot play a card or do not wish to, then you must prepare for the next season.","p.12, p.12, p.13, p.12, p.16",8.7,"correct, but the quote is wr",,True
+Everdell,How many cards can I have in my city?,lookup,15 cards; Event cards don’t count toward the limit.,"Quote: Your city has a maximum of 15 spaces to play cards into. [1]
+Answer: 15","p.11, p.10, p.16, p.10, p.10",2.9,partial,retrieval,True
+Everdell,Difference between exclusive and shared location?,lookup,"Only 1 worker may visit an exclusive location, multiple workers may visit shared location.","Quote: There are two types of locations: exclusive and shared (portrayed with an open encircling ring). Only 1 worker may visit an exclusive location. Multiple workers, even of the same color, may visit a shared location. [Everdell p.8]
+
+Answer: An exclusive location can only be visited by 1 worker, while a shared location can be visited by multiple workers.","p.8, p.8, p.9, p.9, p.18",5.8,correct,,True
+Everdell,Can the board run out of resources in everdell?,lookup,"There is no limit to the amount of resources, find something as a substitue when resources run out.","Quote: If any of the resources run out, use something else as a substitute. [Everdell p.3]
+
+Answer: Yes, the board can run out of resources, but players can use something else as a substitute.","p.3, p.3, p.6, p.9, p.4",4.5,correct,,True
+Bang,What roles are in a 4 player game?,lookup,"4 players: 1 Sheriff, 1 Renegade, 2 Outlaws.","Quote: 4 players: 1 Sheriff, 1 Renegade, 2 Outlaws [2]
+Answer: 1 Sheriff, 1 Renegade, 2 Outlaws.","p.4, p.2, p.2, p.1, p.2",4.0,correct,,True
+Bang,What is the distance with panic card?,lookup,A player at distance 1.,"Quote: The symbols state: “Draw a card” from “a player at distance 1”. [2]
+Answer: 1","p.4, p.7, p.8, p.5, p.8",4.0,correct,,True
+Bang,What is the distance with panic card when I have mustang?,interaction,A player at distance 1.,"Quote: Remember that this distance is not modified by weapons, but only by cards such as Mustang and/or Scope. [3]
+Answer: The distance is not modified by the Mustang card.","p.8, p.7, p.7, p.4, p.10",4.4,partial,model,True
+Bang,What is the distance with panic card when I have scope?,interaction,A player at distance 2.,"Quote: The symbols state: “Draw a card” from “a player at distance 1”. [3]
+Answer: 1","p.8, p.4, p.7, p.7, p.5",3.9,wrong,model,True
+Bang,What happens when I have both jail and dynamite?,lookup,"Check the Dynamite first, then jail.","Quote: If you have both the Dynamite and a Jail in play, check the Dynamite first. [1]
+Answer: Check the Dynamite first.","p.9, p.9, p.9, p.10, p.9",4.2,correct,,True
+Bang,Which characters have only 3 life points?,list,"El Gringo, Paul Regret.","Quote: If during game Jesse loses one life point and he is down at 3, he can only hold up to three cards in his hand at the end of his turn. [3]
+Answer: Jesse.","p.10, p.10, p.2, p.10, p.11",4.4,wrong,retrieval,False
+Bang,Slab the Killer shoots me and I have a Barrel. How do I defend?,interaction,"Draw for the Barrel first. If it succeeds, it counts as one Missed!, so you need 1 more Missed! card; if it fails, you need 2 Missed! cards.","Quote: The Barrel effect, if successfully used, only counts as one Missed!. [1]
+Answer: You can use the Barrel to defend, but it only counts as one Missed!.","p.10, p.2, p.5, p.5, p.6",4.3,partial,model,True
+Bang,Do I need to play 2 beers when I have 1 life and I get hit by dynamite?,interaction,"Player needs to play 3 beers, 1-3 is -2 and player needs to have 1 life, so -2 + 3 = 1.","Quote: The Beer can be played in two ways: • as usual, during your turn; • out of turn, but only if you have just received a hit that is lethal (i.e. a hit that takes away your last life point), and not if you are simply hit. [2]
+Answer: No, you can play one Beer out of turn if you have just received a lethal hit.","p.6, p.6, p.9, p.11, p.9",6.3,wrong,model,True
+Everdell,Can I trade cards with other players?,not_in_rules,not in the rules,not in the rules,"p.9, p.10, p.11, p.5, p.19",2.7,correct,,
+Terraforming Mars,What is the best corporation for beginners?,not_in_rules,not in the rules,"Quote: It is typically used for players new to the game, as it can arguably start with a slight advantage. [1]
+Answer: The Beginner corporation.","p.8, p.8, p.10, p.12, p.7",3.8,correct,,
+Bang,How long does a game usually take?,not_in_rules,not in the rules,not in the rules,"p.4, p.2, p.4, p.3, p.3",2.2,correct,,

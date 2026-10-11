@@ -7,16 +7,16 @@ Terraforming Mars,What each standard project do?,list,1,1.0
 Terraforming Mars,How much buying a card costs in terraforming mars?,lookup,2,1.0
 Terraforming Mars,Can I go over in temperature and oxygen parameter?,implicit,2,1.0
 Terraforming Mars,Can I affect an opponent's production or resources?,faq,1,1.0
-Everdell,What are the main resources in everdell?,implicit,,0.0
+Everdell,What are the main resources in everdell?,implicit,19,0.0
 Everdell,When I prepare for new season?,lookup,1,1.0
 Everdell,How many cards can I have in my city?,lookup,1,1.0
 Everdell,Difference between exclusive and shared location?,lookup,1,1.0
-Everdell,Can the board run out of resources in everdell?,lookup,4,1.0
+Everdell,Can the board run out of resources in everdell?,lookup,3,1.0
 Bang,What roles are in a 4 player game?,lookup,2,1.0
 Bang,What is the distance with panic card?,lookup,2,1.0
 Bang,What is the distance with panic card when I have mustang?,interaction,3,1.0
 Bang,What is the distance with panic card when I have scope?,interaction,3,1.0
 Bang,What happens when I have both jail and dynamite?,lookup,1,1.0
-Bang,Which characters have only 3 life points?,lookup,10,0.0
-Bang,Do I need to draw card for barrel when I'm hit by Slab the Killer and I've used Missed!?,lookup,2,1.0
+Bang,Which characters have only 3 life points?,list,10,0.0
+Bang,Slab the Killer shoots me and I have a Barrel. How do I defend?,interaction,1,1.0
 Bang,Do I need to play 2 beers when I have 1 life and I get hit by dynamite?,interaction,3,1.0

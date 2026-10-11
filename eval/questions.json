@@ -158,10 +158,10 @@
     },
     {
         "game": "Bang",
-        "question": "Do I need to draw card for barrel when I'm hit by Slab the Killer and I've used Missed!?",
+        "question": "Slab the Killer shoots me and I have a Barrel. How do I defend?",
         "must_contain": "only counts as one",
-        "answer": "Player needs to use 2 Missed! effects, so either 2 Missed! cards, or 1 Missed! card and one succesful barrel draw.",
-        "type": "lookup"
+        "answer": "Draw for the Barrel first. If it succeeds, it counts as one Missed!, so you need 1 more Missed! card; if it fails, you need 2 Missed! cards.",
+        "type": "interaction"
     },
     {
         "game": "Bang",
