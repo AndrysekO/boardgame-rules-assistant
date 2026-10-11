@@ -1,6 +1,7 @@
 """Retrieval eval: where does the chunk with the expected text rank for each question?
 
 Run with: uv run python eval/retrieval_eval.py baseline
+Saves eval/results/retrieval/<label>.csv.
 """
 import csv
 import json
@@ -39,7 +40,9 @@ mrr = sum(1 / r["rank"] for r in rows if r["rank"]) / len(rows)
 avg_coverage = sum(r["coverage@5"] for r in rows) / len(rows)
 print(f"\nrecall@5: {found_in_5}/{len(rows)}   MRR: {mrr:.2f}   coverage@5: {avg_coverage:.0%}")
 
-out = pathlib.Path(f"eval/results_{label}.csv")
+out_dir = pathlib.Path("eval/results/retrieval")
+out_dir.mkdir(parents=True, exist_ok=True)
+out = out_dir / f"{label}.csv"
 with out.open("w", newline="") as f:
     writer = csv.DictWriter(f, fieldnames=rows[0].keys())
     writer.writeheader()

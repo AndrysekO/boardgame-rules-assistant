@@ -6,8 +6,10 @@ RAG + agent that answers board game rules questions from PDF rulebooks with page
 - Run a script: `uv run python src/<script>.py`
 - Add a dependency: `uv add <package>` (never `pip install`)
 - Rebuild the index: `uv run python src/ingest.py` (deletes and rebuilds data/chroma)
-- Retrieval eval: `uv run python eval/retrieval_eval.py <label>`
-- Answer eval: `uv run python eval/answer_eval.py <label>`
+- Retrieval eval: `uv run python eval/retrieval_eval.py <label>` (saves eval/results/retrieval/<label>.csv)
+- Answer eval: `uv run python eval/answer_eval.py <label>` (saves eval/results/answers/<label>.csv and .xlsx)
+  - `--agent` answers with src/agent.py instead of ask.py
+  - `--previous <label or file>` shows the grades from an earlier run next to the new answers
 - Use a Claude model: `RULES_MODEL=claude-haiku-5-5 uv run python ...` (default is the local Ollama model)
 
 ## Conventions
