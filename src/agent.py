@@ -29,6 +29,10 @@ MAX_EXACT_MATCHES = 15
 # append to it and agent_answer() resets it, so the tools can enforce the limit.
 TOOL_CALLS = []
 
+# Model and token counts summed over every model call of the most recent
+# agent_answer(), like ask.LAST_USAGE. None if the model reported no usage.
+LAST_USAGE = {"model": CHAT_MODEL, "input_tokens": None, "output_tokens": None}
+
 # When the model asks for several searches at once, LangGraph runs them in
 # parallel threads. Chroma's client isn't safe to open from several threads at
 # the same time, and the limit check needs a consistent count, so searches take turns.
@@ -77,11 +81,12 @@ def search(tool_name, game, query, source):
         if len(TOOL_CALLS) >= MAX_TOOL_CALLS:
             return ("Search limit reached. Answer from the excerpts you already have, "
                     "or reply: not in the rules")
-        TOOL_CALLS.append({"tool": tool_name, "game": game, "query": query})
         if tool_name == "search_exact":
             chunks = find_exact(game, query)
         else:
             chunks = retrieve(query, game, k=TOP_K, source=source)
+        # The chunks are kept so the eval can check what the agent saw.
+        TOOL_CALLS.append({"tool": tool_name, "game": game, "query": query, "chunks": chunks})
 
     if not chunks:
         return f"No excerpts found for {query!r} in game {game!r}."
@@ -141,7 +146,8 @@ def agent_answer(question, game=None):
     """Answer `question` by letting the agent search the rules.
 
     Returns (answer text, tool calls), where each tool call is a dict with
-    the tool name, game and query, in the order the agent made them.
+    the tool name, game, query and the chunks it returned, in the order the
+    agent made them. Summed token counts land in LAST_USAGE.
     """
     TOOL_CALLS.clear()
     agent = create_agent(
@@ -155,16 +161,30 @@ def agent_answer(question, game=None):
     # Each search round is two graph steps (model, then tools). Allow the 6
     # searches, one more round that only gets "limit reached", and the answer.
     recursion_limit = 2 * (MAX_TOOL_CALLS + 1) + 1
+    # stream() hands back the conversation after every step. Keeping the latest
+    # one means we still have every message, and its tokens, if the run is cut off.
+    state = {"messages": []}
     try:
-        result = agent.invoke(
+        for state in agent.stream(
             {"messages": [("user", user_message)]},
             {"recursion_limit": recursion_limit},
-        )
+            stream_mode="values",
+        ):
+            pass
+        text = state["messages"][-1].text.strip()
     except GraphRecursionError:
         # The agent kept searching past the limit instead of answering.
-        return "not in the rules", list(TOOL_CALLS)
+        text = "not in the rules"
 
-    return result["messages"][-1].text.strip(), list(TOOL_CALLS)
+    # Only the model's messages carry usage; tool results and the question don't.
+    usages = [m.usage_metadata for m in state["messages"]
+              if getattr(m, "usage_metadata", None)]
+    LAST_USAGE.update(
+        model=CHAT_MODEL,
+        input_tokens=sum(u["input_tokens"] for u in usages) if usages else None,
+        output_tokens=sum(u["output_tokens"] for u in usages) if usages else None,
+    )
+    return text, list(TOOL_CALLS)
 
 
 if __name__ == "__main__":
