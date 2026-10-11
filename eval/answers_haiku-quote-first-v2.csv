@@ -1,0 +1,64 @@
+game,question,type,expected,model,model_answer,retrieved_pages,seconds,input_tokens,output_tokens,grade,cause,chunk_retrieved
+Terraforming Mars,What is the number of players that can play?,lookup,"1-5 players: 2-5 in the standard game, plus a solo variant for 1 player (p.13).",claude-haiku-5-5,"Quote: ""This describes the setup for the standard game for 2-5 players. See additional rules for other game variants on page 13."" [Terraforming Mars p.7]
+
+Answer: The standard game supports 2 to 5 players.","p.33, p.14, p.7, p.13, p.30",2.6,851,156,,,True
+Terraforming Mars,What is the maximum number of players?,lookup,5 players.,claude-haiku-5-5,"Quote: not applicable
+Answer: not in the rules","p.33, p.13, p.32, p.13, p.32",1.3,853,86,,,False
+Terraforming Mars,How many ocean tiles does the game include?,implicit,9 Ocean tiles.,claude-haiku-5-5,"Quote: ""Ocean tiles: This global parameter starts with 9 tiles in a stack here, to be placed on the board during the game."" [Terraforming Mars p.4]
+
+Answer: The game includes 9 ocean tiles, which start in a stack. The board has 12 areas reserved for ocean tiles, but the excerpts do not say those areas are filled at the start, so they are not a count of tiles.","p.15, p.5, p.4, p.15, p.4",2.3,991,345,,,False
+Terraforming Mars,How many areas on the board are reserved for oceans?,implicit,12 Ocean tiles.,claude-haiku-5-5,"Quote: ""There are 12 areas on the game board that are reserved for ocean tiles; Ocean tiles may only be placed on such areas and no other tiles may be placed there."" [Terraforming Mars p.15]
+
+Answer: 12 areas on the board are reserved for ocean tiles.","p.4, p.15, p.5, p.25, p.15",1.6,1068,179,,,True
+Terraforming Mars,When does the game end?,lookup,"When all three global parameters reach their goals (14% oxygen, 9 oceans, +8 °C).",claude-haiku-5-5,"Quote: ""When all three global parameters (ocean, tempe- rature, and oxygen) have reached their goals, the game ends at the end of that generation."" [Terraforming Mars p.12]
+
+Answer: The game ends at the end of the generation in which all three global parameters (ocean, temperature, and oxygen) reach their goals, after the production phase.","p.12, p.3, p.29, p.3, p.12",2.7,843,306,,,True
+Terraforming Mars,How much buying a card costs in terraforming mars?,lookup,3 MegaCredits.,claude-haiku-5-5,"Quote: ""Cards cost 3 M€ to buy into your hand during the research phase, but have different costs to play from your hand into play."" [Terraforming Mars p.14]
+
+Answer: Buying a card into your hand during the research phase costs 3 M€. The exception is the Polyphemos C corporation, where purchased cards cost 5 MC instead [Terraforming Mars p.43].","p.6, p.14, p.9, p.9, p.43",1.8,912,230,,,True
+Terraforming Mars,Can I go over in temperature and oxygen parameter?,implicit,"No, temperature or oxygen can't be increased when it's reach it max value and the player won't increase their TR.",claude-haiku-5-5,"Quote: ""When a global parameter has reached its goal, it can't be raised any further, and so does not increase your TR. You may still play cards and actions that increase the parameter - just ignore that part of the effect."" [Terraforming Mars p.3]
+
+Answer: No. Once temperature or oxygen reaches its goal, it can't be raised any further. You can still play cards or actions that increase it, but you ignore that part of the effect. The excerpts don't state the goal values for temperature or oxygen.","p.14, p.3, p.49, p.11, p.39",2.2,996,380,,,True
+Terraforming Mars,Can I affect an opponent's production or resources?,faq,"Yes, but only when the resource or production symbol on the card has a red border; then you may reduce any player’s.",claude-haiku-5-5,"Quote: ""Only when you see the red border around a resource or production symbol can you affect another player."" [Terraforming Mars p.17]
+
+Answer: Yes, but only when a card shows a red border around the resource or production symbol. Without that red border, you cannot affect another player's production or resources.","p.17, p.17, p.17, p.17, p.14",1.7,978,180,,,True
+Everdell,What are the main resources in everdell?,implicit,"Berries, Twigs, Resin, Pebbles",claude-haiku-5-5,not in the rules,"p.8, p.3, p.8, p.3, p.8",1.6,806,111,,,False
+Everdell,When I prepare for new season?,lookup,When you have placed all your workers and can’t or don’t want to play a card.,claude-haiku-5-5,"Quote: ""If you have placed all of your workers and you cannot play a card or do not wish to, then you must prepare for the next season."" [Everdell p.12]
+
+Answer: You prepare for the next season once you have placed all of your workers and either cannot play a card or do not wish to play one.","p.12, p.12, p.13, p.12, p.16",1.7,920,175,,,True
+Everdell,How many cards can I have in my city?,lookup,15 cards; Event cards don’t count toward the limit.,claude-haiku-5-5,"Quote: ""Your city has a maximum of 15 spaces to play cards into. Each card takes up 1 space. Recommended layout is 3 rows with 5 cards in each. Event cards do not count against this 15 card limit."" [Everdell p.11]
+
+Answer: Your city can hold a maximum of 15 cards (not counting Event cards).","p.11, p.10, p.16, p.10, p.10",1.4,703,115,,,True
+Everdell,Difference between exclusive and shared location?,lookup,"Only 1 worker may visit an exclusive location, multiple workers may visit shared location.",claude-haiku-5-5,"Quote: ""There are two types of locations: exclusive and shared (portrayed with an open encircling ring). Only 1 worker may visit an exclusive location. Multiple workers, even of the same color, may visit a shared location."" [Everdell p.8]
+
+Answer: An exclusive location can hold only 1 worker, while a shared location can hold multiple workers, even of the same color.","p.8, p.8, p.9, p.9, p.18",1.8,873,204,,,True
+Everdell,Can the board run out of resources in everdell?,lookup,"There is no limit to the amount of resources, find something as a substitue when resources run out.",claude-haiku-5-5,"Quote: ""There is no limit to the amount of resources a player may have during the game. If any of the resources run out, use something else as a substitute."" [Everdell p.6]
+
+Answer: Yes, resources can run out. If they do, the rules say to use something else as a substitute.","p.3, p.3, p.6, p.9, p.4",1.5,900,225,,,True
+Bang,What roles are in a 4 player game?,lookup,"4 players: 1 Sheriff, 1 Renegade, 2 Outlaws.",claude-haiku-5-5,"Quote: [Bang p.2] ""4 players: 1 Sheriff, 1 Renegade, 2 Outlaws""
+
+Answer: A 4-player game uses 1 Sheriff, 1 Renegade, and 2 Outlaws.","p.4, p.2, p.2, p.1, p.2",2.5,911,85,,,True
+Bang,What is the distance with panic card?,lookup,A player at distance 1.,claude-haiku-5-5,"Quote: Panic! The symbols state: ""Draw a card"" from ""a player at distance 1"". Remember that this distance is not modified by weapons, but only by cards such as Mustang and/or Scope. [Bang p.7]
+
+Answer: Panic! can be played on a player at distance 1. That distance is changed only by cards such as Mustang and/or Scope, not by weapons.","p.4, p.7, p.8, p.5, p.8",1.8,1010,255,,,True
+Bang,What is the distance with panic card when I have mustang?,interaction,A player at distance 1.,claude-haiku-5-5,"Quote: ""Remember that this distance is not modified by weapons, but only by cards such as Mustang and/or Scope."" [Bang p.7]; ""When you have a Mustang horse in play the distance between other players and you is increased by 1."" [Bang p.8]
+
+Answer: Panic uses distance 1, and a Mustang modifies that distance. If you have a Mustang in play, other players see you at one greater distance, so a player who would normally be at distance 1 from you (for example, an adjacent player) is at distance 2 and cannot use Panic on you. The rules excerpts don't say what distance a Panic player gets when they hold the Mustang themselves.","p.8, p.7, p.7, p.4, p.10",4.0,1010,698,,,True
+Bang,What is the distance with panic card when I have scope?,interaction,A player at distance 2.,claude-haiku-5-5,"Quote: ""Remember that this distance is not modified by weapons, but only by cards such as Mustang and/or Scope."" [Bang p.7]; ""When you have a Scope in play, you see all the other players at a distance decreased by 1."" [Bang p.8]
+
+Answer: With a Scope in play, the Panic! distance is reduced by 1 for you, so you can target a player who is at distance 1 after the Scope reduction. The excerpts don't give a specific distance number for this case, so the exact result depends on the player's position.","p.8, p.4, p.7, p.7, p.5",2.9,988,470,,,True
+Bang,What happens when I have both jail and dynamite?,lookup,"Check the Dynamite first, then jail.",claude-haiku-5-5,"Quote: ""If you have both the Dynamite and a Jail in play, check the Dynamite first."" [Bang p.9]
+
+Answer: The Dynamite is checked first, before the Jail.","p.9, p.9, p.9, p.10, p.9",1.8,1028,119,,,True
+Bang,Which characters have only 3 life points?,list,"El Gringo, Paul Regret.",claude-haiku-5-5,Not in the rules,"p.10, p.10, p.2, p.10, p.11",2.0,927,225,,,False
+Bang,Slab the Killer shoots me and I have a Barrel. How do I defend?,interaction,"Draw for the Barrel first. If it succeeds, it counts as one Missed!, so you need 1 more Missed! card; if it fails, you need 2 Missed! cards.",claude-haiku-5-5,"Quote: ""Slab the Killer (4 life points): players trying to cancel his BANG! cards need to play 2 Missed!. The Barrel effect, if successfully used, only counts as one Missed!."" [Bang p.10]
+
+Answer: Slab the Killer's BANG! cards require 2 Missed!. A successful Barrel counts as only one Missed!, so you will also need to play another Missed! card to cancel the shot. The excerpts don't explain how the Barrel itself is resolved.","p.10, p.2, p.5, p.5, p.6",2.7,991,430,,,True
+Bang,Do I need to play 2 beers when I have 1 life and I get hit by dynamite?,interaction,"Player needs to play 3 beers, 1-3 is -2 and player needs to have 1 life, so -2 + 3 = 1.",claude-haiku-5-5,"Quote: ""Example. You have 2 life points left, and suffer 3 damages from a Dynamite. If you play 2 Beers you will stay alive with 1 life point left (2-3+2), while you would be eliminated playing only one Beer that would allow you to regain just 1 life point."" [Bang p.6]
+
+Answer: The excerpts don't address the case of 1 life point directly. The example is for 2 life points. Applying its logic, 1 life point minus 3 damage leaves -2, and 2 Beers would only bring you to 0, which is still eliminated. So 2 Beers would not be enough in this case, but the excerpts don't state how many you would need.","p.6, p.6, p.9, p.11, p.9",6.3,989,1065,,,True
+Everdell,Can I trade cards with other players?,not_in_rules,not in the rules,claude-haiku-5-5,not in the rules,"p.9, p.10, p.11, p.5, p.19",1.6,903,120,,,
+Terraforming Mars,What is the best corporation for beginners?,not_in_rules,Beginner Corporation.,claude-haiku-5-5,not in the rules,"p.8, p.8, p.10, p.12, p.7",2.0,976,199,,,True
+Bang,How long does a game usually take?,not_in_rules,not in the rules,claude-haiku-5-5,"Quote: none
+
+Answer: not in the rules","p.4, p.2, p.4, p.3, p.3",1.1,879,17,,,
