@@ -124,7 +124,9 @@ PDF rulebooks ─► ingest ─► Chroma (chunks + embeddings)
 |---|---|---|---|---|---|
 | llama3.1:8b, single search | ~12 | several | 1 search | ~4 s | $0 |
 | Haiku 5.5, single search | ~16 | 0 | 1 search | ~2 s | ~$0.005 |
-| Haiku 5.5, agent (3 tools) | ~23 | 0 | 2.1 | ~3.2 s | ~$0.016 |
+| Haiku 5.5, agent (3 tools) | 21 (in all 3 runs) | 0 | 2.1 | ~3.2 s | ~$0.016 |
+
+Grades per run: see eval/results/summary.md.
 
 ## Key findings
 
@@ -132,6 +134,8 @@ PDF rulebooks ─► ingest ─► Chroma (chunks + embeddings)
 - **Model vs retrieval:** llama failed on questions combining two rules; Haiku fixed those, making retrieval the bottleneck.
 - **Haiku: zero confident wrong answers.** It states precisely what the excerpts don't cover.
 - **Semantic vs keyword search:** embeddings can't tell "3 life points" from "4 life points"; a keyword tool fixed it in 2 calls.
+- Agent: fixed every retrieval failure (21/24 correct in all 3 runs, zero confident wrong answers) at about 3× the cost of single search.
+- More context isn't free: on one question the agent retrieved the right sentence among ~20 chunks and still missed it, a regression compared to single search.
 
 ## Limitations
 
