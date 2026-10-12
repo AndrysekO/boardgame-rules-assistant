@@ -1,7 +1,8 @@
 # Board Game Rules Assistant
 
-Answers board game rules questions from PDF rulebooks, with page citations. Games: Terraforming Mars (rules + fan FAQ), Everdell, BANG!.
-
+Answers board game rules questions from PDF rulebooks, with quoted rules and page citations.
+Usable as a CLI, a FastAPI service, or an MCP server for AI clients such as Claude Code.
+Games: Terraforming Mars (rules + fan FAQ), Everdell, BANG!.
 
 ## MCP Preview
 
@@ -12,6 +13,26 @@ Answers board game rules questions from PDF rulebooks, with page citations. Game
 
 ![MCP answer with quoted rules and page citations](docs/images/mcp_output.png)
 
+## How to run
+
+Requires [uv](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com).
+
+```bash
+ollama pull nomic-embed-text
+ollama pull llama3.1:8b
+uv sync
+```
+
+Rulebooks aren't included (copyright). Put your own PDFs in `data/pdfs/`, named
+`<game>_<source>.pdf`, e.g. `terraforming_mars_rules.pdf`, `terraforming_mars_faq.pdf`.
+
+```bash
+uv run python src/ingest.py                                   # build the index
+uv run python src/ask.py --game bang "What is the distance with Panic!?"
+RULES_MODEL=claude-haiku-5-5 uv run python src/agent.py --game bang "Which characters have 3 life points?"
+```
+
+Claude models need `ANTHROPIC_API_KEY` in the environment.
 
 ## Architecture
 
@@ -74,7 +95,7 @@ PDF rulebooks ─► ingest ─► Chroma (chunks + embeddings)
 - Exposes the tools, not the agent: the client's model (e.g. Claude Code) does the reasoning, so no second model and no extra cost.
 - Models via MCP: Claude Code's model for reasoning, local Ollama for embeddings. Haiku isn't used.
 - Never print to stdout: the protocol uses it.
-- Connect: `claude mcp add rules -- uv run --directory ~/src/rules-assistant python src/mcp_server.py`.
+- Connect: `claude mcp add rules -- uv run --directory ~/src/boardgame-rules-assistant python src/mcp_server.py`.
 
 ## Eval setup
 
@@ -98,6 +119,19 @@ PDF rulebooks ─► ingest ─► Chroma (chunks + embeddings)
 
 | Setup | Correct (of 24) | Confident wrong | Tool calls | Time per question | Cost per run |
 |---|---|---|---|---|---|
-| llama3.1:8b, single search | ~15 | several | 1 search | ~4 s | $0 |
-| Haiku 5.5, single search | ~19 | 0 | 1 search | ~2 s | ~$0.005 |
-| Haiku 5.5, agent (3 tools) | ~24 (23/24/24) | 0 | 2.1 | ~3.2 s | ~$0.016 |
+| llama3.1:8b, single search | ~12 | several | 1 search | ~4 s | $0 |
+| Haiku 5.5, single search | ~16 | 0 | 1 search | ~2 s | ~$0.005 |
+| Haiku 5.5, agent (3 tools) | ~23 (23/23/23) | 0 | 2.1 | ~3.2 s | ~$0.016 |
+
+## Key findings
+
+- **Data quality first:** most early failures came from chunking (mid-word cuts, table-of-contents entries like "Player Boards: 6", shredded component lists), not the model.
+- **Model vs retrieval:** llama failed on questions combining two rules; Haiku fixed those, making retrieval the bottleneck.
+- **Haiku: zero confident wrong answers.** It states precisely what the excerpts don't cover.
+- **Semantic vs keyword search:** embeddings can't tell "3 life points" from "4 life points"; a keyword tool fixed it in 2 calls.
+
+## Limitations
+
+- Embeddings need local Ollama, so no cloud deployment or full eval in CI yet (would need hosted or in-container embeddings and a re-ingest).
+- Small test set (24 questions), tuned on during development; no held-out set yet.
+- PDF extraction issues remain on some pages (sidebars, decorative letters, icons).
