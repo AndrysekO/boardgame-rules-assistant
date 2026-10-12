@@ -95,7 +95,10 @@ PDF rulebooks ─► ingest ─► Chroma (chunks + embeddings)
 - Exposes the tools, not the agent: the client's model (e.g. Claude Code) does the reasoning, so no second model and no extra cost.
 - Models via MCP: Claude Code's model for reasoning, local Ollama for embeddings. Haiku isn't used.
 - Never print to stdout: the protocol uses it.
-- Connect: `claude mcp add rules -- uv run --directory ~/src/boardgame-rules-assistant python src/mcp_server.py`.
+- Connect (replace `/path` with the folder where you cloned the repo):
+```bash
+  claude mcp add rules-assistant -- uv run --directory /path/boardgame-rules-assistant python src/mcp_server.py
+```
 
 ## Eval setup
 
@@ -121,7 +124,7 @@ PDF rulebooks ─► ingest ─► Chroma (chunks + embeddings)
 |---|---|---|---|---|---|
 | llama3.1:8b, single search | ~12 | several | 1 search | ~4 s | $0 |
 | Haiku 5.5, single search | ~16 | 0 | 1 search | ~2 s | ~$0.005 |
-| Haiku 5.5, agent (3 tools) | ~23 (23/23/23) | 0 | 2.1 | ~3.2 s | ~$0.016 |
+| Haiku 5.5, agent (3 tools) | ~23 | 0 | 2.1 | ~3.2 s | ~$0.016 |
 
 ## Key findings
 
