@@ -122,7 +122,7 @@ PDF rulebooks ─► ingest ─► Chroma (chunks + embeddings)
 
 | Setup | Correct (of 24) | Confident wrong | Tool calls | Time per question | Cost per run |
 |---|---|---|---|---|---|
-| llama3.1:8b, single search | 12 | several | 1 search | ~4 s | $0 |
+| llama3.1:8b, single search | 11-14 (3 runs) | several | 1 search | ~4 s | $0 |
 | Haiku 5.5, single search | 15–16 (2 runs) | 0 | 1 search | ~2 s | ~$0.005 |
 | Haiku 5.5, agent (3 tools) | 21 (in all 3 runs) | 0 | 2.1 | ~3.2 s | ~$0.016 |
 
