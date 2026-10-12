@@ -5,7 +5,7 @@ Ollama must be running, because queries are embedded with nomic-embed-text.
 
 Connect it to Claude Code (run once, with the path to this repo):
     claude mcp add rules-assistant -- \
-        uv run --directory /path/to/rules-assistant python src/mcp_server.py
+        uv run --directory /path/boardgame-rules-assistant python src/mcp_server.py
 Add --scope project before the name to share it through a .mcp.json file in
 the repo, or --scope user to have it in every project. Check it with
 `claude mcp list`, or /mcp inside Claude Code. Then ask e.g.
