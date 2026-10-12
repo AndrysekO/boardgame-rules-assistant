@@ -1,0 +1,9 @@
+.venv/
+.git/
+eval/results/
+data/pdfs/
+__pycache__/
+*.pyc
+.pytest_cache/
+# Never send secrets into the build.
+.env
