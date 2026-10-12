@@ -19,11 +19,6 @@ CHAT_MODEL = os.environ.get("RULES_MODEL", "llama3.1:8b")
 TOP_K = 5
 MAX_TOKENS = 2048
 
-# Model and token counts from the most recent answer() call. answer() still
-# returns just (text, chunks), so the eval reads the usage numbers from here.
-# Ollama reports no tokens, so they stay None unless Claude answered.
-LAST_USAGE = {"model": CHAT_MODEL, "input_tokens": None, "output_tokens": None}
-
 SYSTEM = """You answer board game rules questions.
 
 Use only the numbered excerpts you are given. Do not use anything you know about
@@ -113,15 +108,18 @@ def ask_ollama(user_message):
 def answer(question, game=None):
     """Answer `question` from the retrieved chunks.
 
-    Returns (answer text, chunks) so the caller can show the evidence it used.
-    Which model answers comes from RULES_MODEL; token counts land in LAST_USAGE.
+    Returns a dict:
+      text: the answer
+      chunks: the retrieved chunks, so the caller can show the evidence it used
+      usage: the model (from RULES_MODEL) and its token counts - Ollama reports
+             no tokens, so they are None unless Claude answered
     """
     chunks = retrieve(question, game)
     if not chunks:
         # Nothing retrieved (an unknown game, an empty database): there are no
         # excerpts to read an answer out of, which is the same as not finding one.
-        LAST_USAGE.update(model=CHAT_MODEL, input_tokens=None, output_tokens=None)
-        return "not in the rules", chunks
+        usage = {"model": CHAT_MODEL, "input_tokens": None, "output_tokens": None}
+        return {"text": "not in the rules", "chunks": chunks, "usage": usage}
 
     excerpts = "\n\n".join(
         f"[{number}] {metadata['game']} p.{metadata['page']}\n{text}"
@@ -131,10 +129,8 @@ def answer(question, game=None):
 
     send = ask_claude if CHAT_MODEL.startswith("claude-") else ask_ollama
     text, input_tokens, output_tokens = send(user_message)
-    LAST_USAGE.update(
-        model=CHAT_MODEL, input_tokens=input_tokens, output_tokens=output_tokens
-    )
-    return text, chunks
+    usage = {"model": CHAT_MODEL, "input_tokens": input_tokens, "output_tokens": output_tokens}
+    return {"text": text, "chunks": chunks, "usage": usage}
 
 
 if __name__ == "__main__":
@@ -144,7 +140,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     question = " ".join(args.question)
 
-    text, chunks = answer(question, args.game)
+    result = answer(question, args.game)
+    chunks = result["chunks"]
     if not chunks:
         raise SystemExit(f"no chunks for game {args.game!r} - did you run src/ingest.py?")
 
@@ -156,4 +153,4 @@ if __name__ == "__main__":
         print(textwrap.indent(textwrap.fill(chunk, 92), "    "))
 
     print("\n--- answer ---")
-    print(textwrap.fill(text, 92))
+    print(textwrap.fill(result["text"], 92))

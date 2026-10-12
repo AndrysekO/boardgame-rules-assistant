@@ -19,8 +19,6 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 sys.path.insert(0, "src")
-import agent
-import ask
 from agent import agent_answer
 from ask import answer
 
@@ -123,13 +121,15 @@ rows = []
 for q in questions:
     start = time.time()
     if args.agent:
-        text, calls = agent_answer(q["question"], q["game"])
+        result = agent_answer(q["question"], q["game"])
+        calls = result["tool_calls"]
         # Every chunk any tool returned counts as retrieved.
         chunks = [chunk for call in calls for chunk in call["chunks"]]
-        usage = agent.LAST_USAGE  # tokens summed over all of the agent's model calls
     else:
-        text, chunks = answer(q["question"], q["game"])
-        usage = ask.LAST_USAGE  # model + token counts from the call we just made
+        result = answer(q["question"], q["game"])
+        chunks = result["chunks"]
+    text = result["text"]
+    usage = result["usage"]  # model + token counts (summed over all agent calls)
     pages = ", ".join(f"p.{meta.get('page')}" for _, meta in chunks)
     needles = q.get("must_contain", [])
     if isinstance(needles, str):

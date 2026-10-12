@@ -25,17 +25,10 @@ from ask import CHAT_MODEL, COLLECTION, DB_DIR, MAX_TOKENS, TOP_K, retrieve
 MAX_TOOL_CALLS = 6
 MAX_EXACT_MATCHES = 15
 
-# Every search made while answering the current question, in order. The tools
-# append to it and agent_answer() resets it, so the tools can enforce the limit.
-TOOL_CALLS = []
-
-# Model and token counts summed over every model call of the most recent
-# agent_answer(), like ask.LAST_USAGE. None if the model reported no usage.
-LAST_USAGE = {"model": CHAT_MODEL, "input_tokens": None, "output_tokens": None}
-
 # When the model asks for several searches at once, LangGraph runs them in
-# parallel threads. Chroma's client isn't safe to open from several threads at
-# the same time, and the limit check needs a consistent count, so searches take turns.
+# parallel threads, and several questions may be answered at the same time.
+# Chroma's client isn't safe to open from several threads at once, and the
+# limit check needs a consistent count, so all searches take turns.
 SEARCH_LOCK = threading.Lock()
 
 SYSTEM = """You answer board game rules questions.
@@ -75,10 +68,14 @@ def find_exact(game, text):
     return list(zip(result["documents"], result["metadatas"]))
 
 
-def search(tool_name, game, query, source):
-    """Run one search for a tool and return its chunks as numbered excerpts."""
+def search(calls, tool_name, game, query, source):
+    """Run one search for a tool and return its chunks as numbered excerpts.
+
+    `calls` is the list of searches made so far for this question; the search
+    is added to it, and refused once it holds MAX_TOOL_CALLS searches.
+    """
     with SEARCH_LOCK:
-        if len(TOOL_CALLS) >= MAX_TOOL_CALLS:
+        if len(calls) >= MAX_TOOL_CALLS:
             return ("Search limit reached. Answer from the excerpts you already have, "
                     "or reply: not in the rules")
         if tool_name == "search_exact":
@@ -86,7 +83,7 @@ def search(tool_name, game, query, source):
         else:
             chunks = retrieve(query, game, k=TOP_K, source=source)
         # The chunks are kept so the eval can check what the agent saw.
-        TOOL_CALLS.append({"tool": tool_name, "game": game, "query": query, "chunks": chunks})
+        calls.append({"tool": tool_name, "game": game, "query": query, "chunks": chunks})
 
     if not chunks:
         return f"No excerpts found for {query!r} in game {game!r}."
@@ -95,38 +92,6 @@ def search(tool_name, game, query, source):
         f"[{number}] {metadata['game']} p.{metadata['page']}\n{text}"
         for number, (text, metadata) in enumerate(chunks, start=1)
     )
-
-
-@tool
-def search_rulebook(game: str, query: str) -> str:
-    """Search a game's rulebook and return the 5 closest excerpts.
-
-    game must be one of: "Terraforming Mars", "Everdell", "Bang".
-    query is what to look for, e.g. "greenery tile placement".
-    """
-    return search("search_rulebook", game, query, "rules")
-
-
-@tool
-def search_faq(game: str, query: str) -> str:
-    """Search a game's FAQ and return the 5 closest excerpts.
-
-    Only Terraforming Mars has a FAQ, so don't use this for other games.
-    game must be one of: "Terraforming Mars", "Everdell", "Bang".
-    query is what to look for, e.g. "greenery tile placement".
-    """
-    return search("search_faq", game, query, "faq")
-
-
-@tool
-def search_exact(game: str, text: str) -> str:
-    """Return every excerpt of a game that contains the exact text (any case), up to 15.
-
-    Use for specific numbers, values or names, e.g. "3 life points" or a card
-    name. Use search_rulebook for questions about how rules work.
-    game must be one of: "Terraforming Mars", "Everdell", "Bang".
-    """
-    return search("search_exact", game, text, None)
 
 
 def make_model():
@@ -145,11 +110,46 @@ def make_model():
 def agent_answer(question, game=None):
     """Answer `question` by letting the agent search the rules.
 
-    Returns (answer text, tool calls), where each tool call is a dict with
-    the tool name, game, query and the chunks it returned, in the order the
-    agent made them. Summed token counts land in LAST_USAGE.
+    Returns a dict:
+      text: the answer
+      tool_calls: the searches in the order the agent made them, each a dict
+                  with the tool name, game, query and the chunks it returned
+      usage: the model and its token counts summed over all of its calls
+             (None if the model reported no usage)
     """
-    TOOL_CALLS.clear()
+    # The tools are built here, around this call's own list, so questions
+    # answered at the same time never see or count each other's searches.
+    calls = []
+
+    @tool
+    def search_rulebook(game: str, query: str) -> str:
+        """Search a game's rulebook and return the 5 closest excerpts.
+
+        game must be one of: "Terraforming Mars", "Everdell", "Bang".
+        query is what to look for, e.g. "greenery tile placement".
+        """
+        return search(calls, "search_rulebook", game, query, "rules")
+
+    @tool
+    def search_faq(game: str, query: str) -> str:
+        """Search a game's FAQ and return the 5 closest excerpts.
+
+        Only Terraforming Mars has a FAQ, so don't use this for other games.
+        game must be one of: "Terraforming Mars", "Everdell", "Bang".
+        query is what to look for, e.g. "greenery tile placement".
+        """
+        return search(calls, "search_faq", game, query, "faq")
+
+    @tool
+    def search_exact(game: str, text: str) -> str:
+        """Return every excerpt of a game that contains the exact text (any case), up to 15.
+
+        Use for specific numbers, values or names, e.g. "3 life points" or a card
+        name. Use search_rulebook for questions about how rules work.
+        game must be one of: "Terraforming Mars", "Everdell", "Bang".
+        """
+        return search(calls, "search_exact", game, text, None)
+
     agent = create_agent(
         make_model(), [search_rulebook, search_faq, search_exact], system_prompt=SYSTEM
     )
@@ -179,12 +179,12 @@ def agent_answer(question, game=None):
     # Only the model's messages carry usage; tool results and the question don't.
     usages = [m.usage_metadata for m in state["messages"]
               if getattr(m, "usage_metadata", None)]
-    LAST_USAGE.update(
-        model=CHAT_MODEL,
-        input_tokens=sum(u["input_tokens"] for u in usages) if usages else None,
-        output_tokens=sum(u["output_tokens"] for u in usages) if usages else None,
-    )
-    return text, list(TOOL_CALLS)
+    usage = {
+        "model": CHAT_MODEL,
+        "input_tokens": sum(u["input_tokens"] for u in usages) if usages else None,
+        "output_tokens": sum(u["output_tokens"] for u in usages) if usages else None,
+    }
+    return {"text": text, "tool_calls": calls, "usage": usage}
 
 
 if __name__ == "__main__":
@@ -194,12 +194,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     question = " ".join(args.question)
 
-    text, calls = agent_answer(question, args.game)
+    result = agent_answer(question, args.game)
 
     print(f"question: {question}")
-    print(f"\n--- {len(calls)} tool calls ---")
-    for number, call in enumerate(calls, start=1):
+    print(f"\n--- {len(result['tool_calls'])} tool calls ---")
+    for number, call in enumerate(result["tool_calls"], start=1):
         print(f"[{number}] {call['tool']}(game={call['game']!r}, query={call['query']!r})")
 
     print("\n--- answer ---")
-    print(textwrap.fill(text, 92))
+    print(textwrap.fill(result["text"], 92))
