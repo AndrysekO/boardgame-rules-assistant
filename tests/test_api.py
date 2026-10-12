@@ -60,6 +60,32 @@ def test_unknown_mode_is_422():
     assert response.status_code == 422
 
 
+def test_unknown_model_is_422():
+    response = client.post("/ask", json={"question": "How do I win?", "game": "Bang",
+                                         "model": "gpt-4"})
+    assert response.status_code == 422
+    assert "llama3.1:8b" in error_messages(response)  # the message lists the valid models
+
+
+@pytest.mark.parametrize("mode, function", [("single", "answer"), ("agent", "agent_answer")])
+@pytest.mark.parametrize("model", ["claude-haiku-5-5", None])
+def test_model_is_passed_through(monkeypatch, mode, function, model):
+    """The chosen model reaches answer()/agent_answer(); None means RULES_MODEL."""
+    received = []
+    def fake(question, game, model):
+        received.append(model)
+        return {"text": "not in the rules", "chunks": [], "tool_calls": [],
+                "usage": {"model": model or "default", "input_tokens": None,
+                          "output_tokens": None}}
+    monkeypatch.setattr(api, function, fake)
+    body = {"question": "How do I win?", "game": "Bang", "mode": mode}
+    if model:
+        body["model"] = model
+    response = client.post("/ask", json=body)
+    assert response.status_code == 200
+    assert received == [model]
+
+
 def test_api_key_required_when_set(monkeypatch):
     monkeypatch.setenv("RULES_API_KEY", "test-key")
     assert client.get("/games").status_code == 401

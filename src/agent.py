@@ -94,21 +94,24 @@ def search(calls, tool_name, game, query, source):
     )
 
 
-def make_model():
-    """Pick the chat model from RULES_MODEL, the same way ask.py does."""
-    if CHAT_MODEL.startswith("claude-"):
+def make_model(model):
+    """Make the chat model client for `model`, the same way ask.py picks one."""
+    if model.startswith("claude-"):
         if not os.environ.get("ANTHROPIC_API_KEY"):
             raise SystemExit(
-                f"RULES_MODEL={CHAT_MODEL} needs ANTHROPIC_API_KEY in the environment."
+                f"Model {model} needs ANTHROPIC_API_KEY in the environment."
             )
         # No temperature: Claude Haiku 5.5 rejects it (see ask.py's ask_claude).
         # The client reads the key from the environment itself.
-        return ChatAnthropic(model=CHAT_MODEL, max_tokens=MAX_TOKENS)
-    return ChatOllama(model=CHAT_MODEL, temperature=0)
+        return ChatAnthropic(model=model, max_tokens=MAX_TOKENS)
+    return ChatOllama(model=model, temperature=0)
 
 
-def agent_answer(question, game=None):
+def agent_answer(question, game=None, model=None):
     """Answer `question` by letting the agent search the rules.
+
+    `model` is the chat model to use, e.g. "claude-haiku-5-5"; if it isn't
+    given, it comes from RULES_MODEL.
 
     Returns a dict:
       text: the answer
@@ -119,6 +122,7 @@ def agent_answer(question, game=None):
     """
     # The tools are built here, around this call's own list, so questions
     # answered at the same time never see or count each other's searches.
+    model = model or CHAT_MODEL
     calls = []
 
     @tool
@@ -151,7 +155,7 @@ def agent_answer(question, game=None):
         return search(calls, "search_exact", game, text, None)
 
     agent = create_agent(
-        make_model(), [search_rulebook, search_faq, search_exact], system_prompt=SYSTEM
+        make_model(model), [search_rulebook, search_faq, search_exact], system_prompt=SYSTEM
     )
 
     user_message = question
@@ -180,7 +184,7 @@ def agent_answer(question, game=None):
     usages = [m.usage_metadata for m in state["messages"]
               if getattr(m, "usage_metadata", None)]
     usage = {
-        "model": CHAT_MODEL,
+        "model": model,
         "input_tokens": sum(u["input_tokens"] for u in usages) if usages else None,
         "output_tokens": sum(u["output_tokens"] for u in usages) if usages else None,
     }

@@ -31,6 +31,7 @@ from agent import agent_answer
 from ask import answer
 
 GAMES = ["Terraforming Mars", "Everdell", "Bang"]
+MODELS = Literal["llama3.1:8b", "claude-haiku-5-5"]
 
 # A citation in an answer, like [Everdell p.6] or [Terraforming Mars FAQ p.18].
 CITATION = re.compile(r"\[(" + "|".join(re.escape(g) for g in GAMES) + r")[^\]]*? p\.(\d+)\]")
@@ -42,6 +43,7 @@ class AskRequest(BaseModel):
     question: str
     game: str
     mode: Literal["single", "agent"] = "agent"
+    model: MODELS | None = None  # None: use RULES_MODEL
 
     @field_validator("question")
     @classmethod
@@ -123,9 +125,9 @@ def ask(request: AskRequest):
     start = time.time()
     try:
         if request.mode == "agent":
-            result = agent_answer(request.question, request.game)
+            result = agent_answer(request.question, request.game, request.model)
         else:
-            result = answer(request.question, request.game)
+            result = answer(request.question, request.game, request.model)
     except SystemExit as error:
         # ask.py and agent.py stop with SystemExit when ANTHROPIC_API_KEY is
         # missing; in a server that has to become an error response instead.

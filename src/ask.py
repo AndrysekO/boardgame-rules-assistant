@@ -66,7 +66,7 @@ def retrieve(question, game=None, k=TOP_K, source=None):
     ]
 
 
-def ask_claude(user_message):
+def ask_claude(user_message, model):
     """Send one question to the Anthropic API - the project uses claude-haiku-5-5.
 
     No temperature is sent: Claude Haiku 5.5 rejects temperature, top_p and
@@ -76,11 +76,11 @@ def ask_claude(user_message):
     """
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise SystemExit(
-            f"RULES_MODEL={CHAT_MODEL} needs ANTHROPIC_API_KEY in the environment."
+            f"Model {model} needs ANTHROPIC_API_KEY in the environment."
         )
     # The key is read from the environment by the client; never pass it around.
     reply = anthropic.Anthropic().messages.create(
-        model=CHAT_MODEL,
+        model=model,
         max_tokens=MAX_TOKENS,
         system=SYSTEM,
         messages=[{"role": "user", "content": user_message}],
@@ -89,13 +89,13 @@ def ask_claude(user_message):
     return text.strip(), reply.usage.input_tokens, reply.usage.output_tokens
 
 
-def ask_ollama(user_message):
+def ask_ollama(user_message, model):
     """Send one question to the local Ollama server.
 
     Returns (answer text, None, None) - token counts are only tracked for Claude.
     """
     reply = ollama.chat(
-        model=CHAT_MODEL,
+        model=model,
         messages=[
             {"role": "system", "content": SYSTEM},
             {"role": "user", "content": user_message},
@@ -105,20 +105,24 @@ def ask_ollama(user_message):
     return reply.message.content.strip(), None, None
 
 
-def answer(question, game=None):
+def answer(question, game=None, model=None):
     """Answer `question` from the retrieved chunks.
+
+    `model` is the chat model to use, e.g. "claude-haiku-5-5"; if it isn't
+    given, it comes from RULES_MODEL.
 
     Returns a dict:
       text: the answer
       chunks: the retrieved chunks, so the caller can show the evidence it used
-      usage: the model (from RULES_MODEL) and its token counts - Ollama reports
+      usage: the model and its token counts - Ollama reports
              no tokens, so they are None unless Claude answered
     """
+    model = model or CHAT_MODEL
     chunks = retrieve(question, game)
     if not chunks:
         # Nothing retrieved (an unknown game, an empty database): there are no
         # excerpts to read an answer out of, which is the same as not finding one.
-        usage = {"model": CHAT_MODEL, "input_tokens": None, "output_tokens": None}
+        usage = {"model": model, "input_tokens": None, "output_tokens": None}
         return {"text": "not in the rules", "chunks": chunks, "usage": usage}
 
     excerpts = "\n\n".join(
@@ -127,9 +131,9 @@ def answer(question, game=None):
     )
     user_message = f"Excerpts:\n\n{excerpts}\n\nQuestion: {question}"
 
-    send = ask_claude if CHAT_MODEL.startswith("claude-") else ask_ollama
-    text, input_tokens, output_tokens = send(user_message)
-    usage = {"model": CHAT_MODEL, "input_tokens": input_tokens, "output_tokens": output_tokens}
+    send = ask_claude if model.startswith("claude-") else ask_ollama
+    text, input_tokens, output_tokens = send(user_message, model)
+    usage = {"model": model, "input_tokens": input_tokens, "output_tokens": output_tokens}
     return {"text": text, "chunks": chunks, "usage": usage}
 
 
