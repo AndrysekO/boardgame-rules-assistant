@@ -15,24 +15,17 @@ Games: Terraforming Mars (rules + fan FAQ), Everdell, BANG!.
 
 ## How to run
 
-Requires [uv](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com).
+Requires [uv](https://docs.astral.sh/uv/) and [Ollama](https://ollama.com). Rulebooks aren't included (copyright); add your own PDFs as `data/pdfs/<game>_<source>.pdf`.
 
 ```bash
-ollama pull nomic-embed-text
-ollama pull llama3.1:8b
 uv sync
+ollama pull nomic-embed-text && ollama pull llama3.1:8b
+mkdir -p data/pdfs                # then copy your PDFs here, e.g. bang_rules.pdf
+uv run python src/ingest.py       # build the index
+uv run python src/ask.py --game bang "What is the distance with Panic?"
 ```
 
-Rulebooks aren't included (copyright). Put your own PDFs in `data/pdfs/`, named
-`<game>_<source>.pdf`, e.g. `terraforming_mars_rules.pdf`, `terraforming_mars_faq.pdf`.
-
-```bash
-uv run python src/ingest.py                                   # build the index
-uv run python src/ask.py --game bang "What is the distance with Panic!?"
-RULES_MODEL=claude-haiku-5-5 uv run python src/agent.py --game bang "Which characters have 3 life points?"
-```
-
-Claude models need `ANTHROPIC_API_KEY` in the environment.
+Full guide in [docs/SETUP.md](docs/SETUP.md): options (`--game`, `RULES_MODEL`), the agent, the API, Docker, the MCP server in Claude Code, and the evals.
 
 ## Architecture
 
@@ -81,13 +74,12 @@ PDF rulebooks ─► ingest ─► Chroma (chunks + embeddings)
 
 - `GET /health`, `GET /games`, `POST /ask` with question, game, mode (single or agent) and model.
 - Model chosen per request from an allowlist (`llama3.1:8b`, `claude-haiku-5-5`), so callers can't pick expensive models.
-- Run: `RULES_MODEL=claude-haiku-5-5 uv run uvicorn api:app --app-dir src --reload`, then http://localhost:8000/docs.
 
 ## Docker
 
 - Image with uv, dependencies installed from the lock file, plus code and the Chroma index.
 - API keys are never in the image; passed at run time with `-e ANTHROPIC_API_KEY`.
-- Embeddings still come from Ollama on the Mac, reached via `OLLAMA_HOST=http://host.docker.internal:11434`.
+- Embeddings still come from Ollama on the host, reached via `OLLAMA_HOST=http://host.docker.internal:11434`.
 
 ## MCP server
 
@@ -95,10 +87,6 @@ PDF rulebooks ─► ingest ─► Chroma (chunks + embeddings)
 - Exposes the tools, not the agent: the client's model (e.g. Claude Code) does the reasoning, so no second model and no extra cost.
 - Models via MCP: Claude Code's model for reasoning, local Ollama for embeddings. Haiku isn't used.
 - Never print to stdout: the protocol uses it.
-- Connect (replace `/path` with the folder where you cloned the repo):
-  ```bash
-  claude mcp add rules-assistant -- uv run --directory /path/boardgame-rules-assistant python src/mcp_server.py
-  ```
 
 ## Eval setup
 
